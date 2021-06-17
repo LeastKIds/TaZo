@@ -27,31 +27,20 @@
             android:layout_width="match_parent"
             android:layout_height="80dp"
             android:layout_marginBottom="20dp"/>
-        <Button
-            android:text="친구 추가"
-            android:layout_marginTop="15dp"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"/>
+
         <Button
             android:text="파티원 구하기"
             android:layout_marginTop="15dp"
             android:layout_width="match_parent"
-            android:layout_height="60dp"/>
-        <Button
-            android:text="시사게/시사토론"
-            android:layout_marginTop="15dp"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"/>
+            android:layout_height="60dp"
+            android:id="@+id/roomSelect"/>
+
         <Button
             android:text="자유게시판"
             android:layout_marginTop="15dp"
             android:layout_width="match_parent"
             android:layout_height="60dp"/>
-        <Button
-            android:text="연애 상담/과금"
-            android:layout_marginTop="15dp"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"/>
+
 
 
     </LinearLayout>

@@ -354,7 +354,7 @@ public class Chatting extends AppCompatActivity {
         }
     };
 
-    private static class HttpAsyncTask extends AsyncTask<String, Void, String>{
+    static class HttpAsyncTask extends AsyncTask<String, Void, String>{
 
         OkHttpClient client = new OkHttpClient();
         String result;

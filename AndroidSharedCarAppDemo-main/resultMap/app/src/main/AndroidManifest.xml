@@ -22,6 +22,7 @@
         android:networkSecurityConfig="@xml/network_security_config">
         <activity android:name=".Chatting"
             android:launchMode="singleTop"></activity>
+        <activity android:name=".chattingRoom"></activity>
 
         <activity android:name="com.example.resultmap.Emailconfirm"></activity>
         <activity android:name="com.example.resultmap.menu" />
@@ -52,14 +53,7 @@
             android:value="ijtur2q4gz" />
 
 
-<!--        <receiver android:name=".BootReceiver"-->
-<!--            android:enabled="true"-->
-<!--            android:exported="false"-->
-<!--            android:label="BOOTReceiver">-->
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.BOOT_COMPLETED"/>-->
-<!--            </intent-filter>-->
-<!--        </receiver>-->
+
 
         <service android:name=".SocketService"
             android:stopWithTask="false"/>

@@ -30,6 +30,9 @@ public class Login extends AppCompatActivity {
     private Button btn_register, login_button;
     URL url;
 
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -106,4 +109,7 @@ public class Login extends AppCompatActivity {
         });
 
     }
+
+
+
 }
