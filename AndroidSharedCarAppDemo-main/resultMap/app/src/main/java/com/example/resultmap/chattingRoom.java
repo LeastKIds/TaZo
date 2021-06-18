@@ -164,7 +164,8 @@ public class chattingRoom extends AppCompatActivity {
 
             JSONObject jsonStr = (JSONObject) msg.obj;
 
-            String id = (String) jsonStr.get("id");
+            System.out.println(jsonStr.get("id"));
+            String id = jsonStr.get("id")+"";
             String name = (String) jsonStr.get("name");
             String userLimit = jsonStr.get("userLimit") + "";
             String originLat = (String) jsonStr.get("originLat");

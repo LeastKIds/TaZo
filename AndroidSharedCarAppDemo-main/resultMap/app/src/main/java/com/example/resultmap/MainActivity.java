@@ -7,7 +7,9 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentManager;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
@@ -15,6 +17,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -28,7 +31,6 @@ import android.widget.Toast;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.naver.maps.geometry.LatLng;
 import com.naver.maps.map.CameraUpdate;
 import com.naver.maps.map.LocationTrackingMode;
@@ -64,12 +66,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private long backKeyPressedTime = 0;
     private Toast toast;
 
+    String str;
 
     private Boolean check=true;
 
     int myId;
 
-    private Button button,profile_btn;
+    private Button button,profile_btn,makeroom;
     private ImageButton cahage_Button,menubutton,myLocation;
     private EditText text;
 
@@ -81,7 +84,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     };
     private FusedLocationSource mLoction;
     private NaverMap mNaverMap;
-    Marker marker=new Marker();
+    Marker marker;
 
     private DrawerLayout drawerLayout;
     private  View menubar;
@@ -93,11 +96,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     Message msg;
     OkHttpClient client=new OkHttpClient();
 
+    private Context context;
+    private Button logout;
+
+
+
     private Button roomSelect;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        context = this;
+        Thread checkLogin = new CheckLogin();
+        checkLogin.start();
 
         new myGetThead().start();
 
@@ -162,7 +173,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String str=text.getText().toString();
+                str=text.getText().toString();
                 System.out.println(str);
                 new searchlocation(str).start();
             }
@@ -212,6 +223,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         cahage_Button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+//                marker.setMap(null);
+                str=null;
                 if(check){
                     mLlinearLayout.removeAllViews();
                     mLlinearLayout.addView(spinner);
@@ -242,6 +255,38 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 startActivity(intent);
             }
         });
+
+        makeroom=findViewById(R.id.makeroom);
+        makeroom.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                System.out.println(text.getText().length()+"ssssssssssss");
+                if(str==null){
+                    Toast.makeText(getApplicationContext(),"목적지설정후 이용하실수 있습니다",
+                            Toast.LENGTH_SHORT).show();
+                }else{
+                    Intent intent=new Intent(MainActivity.this,RoomMakeActivity.class);
+                    if (check){
+                        intent.putExtra("start",str);
+                        intent.putExtra("result","영진대");
+                    }
+                    else{
+                        intent.putExtra("result",str);
+                        intent.putExtra("start","영진대");
+                    }
+                    startActivity(intent);
+                }
+            }
+        });
+
+        logout = (Button) findViewById(R.id.logout);
+        logout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Thread logout = new Logout();
+                logout.start();
+            }
+        });
     }
 
     DrawerLayout.DrawerListener listener =new DrawerLayout.DrawerListener(){
@@ -267,16 +312,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     };
 
-    protected void search(List<Address> addresses) {
-        Address address = addresses.get(0);
-        LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
-        System.out.println(latLng);
-        CameraUpdate cameraUpdate=CameraUpdate.scrollTo(latLng);
-        cameraUpdate.zoomTo(15.0);
-        mNaverMap.moveCamera(cameraUpdate);
-        marker.setPosition(latLng);
-        marker.setMap(mNaverMap);
-    }
 
 
     @Override
@@ -352,9 +387,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 String[] a=msg.obj.toString().split(" ");
                 LatLng latLng = new LatLng(Double.parseDouble(a[0]), Double.parseDouble(a[1]));
 
+//                System.out.println(Double.parseDouble(a[0])+" "+Double.parseDouble(a[1]));
                 CameraUpdate cameraUpdate=CameraUpdate.scrollTo(latLng);
                 cameraUpdate.zoomTo(15.0);
+
                 mNaverMap.moveCamera(cameraUpdate);
+                marker=new Marker();
                 marker.setPosition(latLng);
                 marker.setMap(mNaverMap);
 
@@ -480,6 +518,86 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             android.os.Process.killProcess(android.os.Process.myPid());
             toast.cancel();
         }
+    }
+
+    public class CheckLogin extends Thread
+    {
+        @Override
+        public void run()
+        {
+
+            String url = "https://tazoapp.site/auth";
+            String shard="file";
+            try {
+                OkHttpClient client = new OkHttpClient();
+
+                SharedPreferences sharedPreferences = getSharedPreferences(shard,0);
+                String setCookie = sharedPreferences.getString("cookie","");
+                Log.d("세션",setCookie);
+
+                Request request = new Request.Builder()
+                        .addHeader("cookie", setCookie)
+                        .url(url)
+                        .build();
+                Response response = client.newCall(request)
+                        .execute();
+
+                String result = response.body().string();
+                System.out.println("result : " + result);
+                if(result.equals("null")){
+                    Intent intent = new Intent(context,Login.class);
+                    startActivity(intent);
+                    finish();
+                }
+
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
+
+
+
+
+        }
+
+    }
+    public class Logout extends Thread
+    {
+        @Override
+        public void run()
+        {
+
+            String url = "https://tazoapp.site/auth/logout";
+            String shard="file";
+            try {
+                OkHttpClient client = new OkHttpClient();
+
+                SharedPreferences sharedPreferences = getSharedPreferences(shard,0);
+                String setCookie = sharedPreferences.getString("cookie","");
+                Log.d("세션",setCookie);
+
+                Request request = new Request.Builder()
+                        .addHeader("cookie", setCookie)
+                        .url(url)
+                        .build();
+                Response response = client.newCall(request)
+                        .execute();
+
+                String result = response.body().string();
+
+                System.out.println(result);
+
+                Intent intent = new Intent(context, Login.class);
+                startActivity(intent);
+
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
+
+
+
+
+        }
+
     }
 
 }

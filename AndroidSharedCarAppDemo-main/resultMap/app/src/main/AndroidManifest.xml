@@ -23,6 +23,7 @@
         <activity android:name=".Chatting"
             android:launchMode="singleTop"></activity>
         <activity android:name=".chattingRoom"></activity>
+        <activity android:name=".RoomMakeActivity"></activity>
 
         <activity android:name="com.example.resultmap.Emailconfirm"></activity>
         <activity android:name="com.example.resultmap.menu" />
@@ -37,7 +38,7 @@
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyDDQqmsUbbhENye7Vo__ZoGyI8OLmrPCAs"/>
+            android:value="AIzaSyDSnjBWNdqpJYMKg856fh6POVf4V3TXfcI"/>
 
         <activity android:name=".MainActivity">
             <intent-filter>

@@ -3,13 +3,16 @@ package com.example.resultmap;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioButton;
@@ -18,9 +21,7 @@ import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.NetworkResponse;
-import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.HttpHeaderParser;
@@ -37,112 +38,67 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
 public class RegisterActivity extends AppCompatActivity {
 
-    private RequestQueue requestQueue;
+//    private RequestQueue requestQueue;
     private EditText et_name, et_nickname, et_email, et_passwd, et_passwd_confirm, et_gender;
     private Button btn_submit;
     private RadioGroup rg_gender;
     private RadioButton rb_male, rb_female;
-    private String geneder;
-
+    private String gender="";
+    private Context context;
+    private String email;
 
     //<=====================================카카오========================================================================================>
 
 //    private ISessionCallback mSessionCallback;
 
-    public void intent(){
-        Intent intent = new Intent(this, Login.class);
-        startActivity(intent);
-    }
+//    public void intent(){
+//        Intent intent = new Intent(this, EmailConfirm.class);
+//        startActivity(intent);
+//    }
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
+        context = this;
 
-//        mSessionCallback = new ISessionCallback() {
-//            @Override
-//            public void onSessionOpened() {
-//                //로그인 요청
-//                UserManagement.getInstance().me(new MeV2ResponseCallback() {
-//                    @Override
-//                    public void onFailure(ErrorResult errorResult) {
-//                        // 로그인 실패
-//                        Toast.makeText(RegisterActivity.this, "로그인 도중에 오류가 발생했습니다", Toast.LENGTH_SHORT).show();
-//                    }
-//
-//                    @Override
-//                    public void onSessionClosed(ErrorResult errorResult) {
-//                        //세션이 닫힘..
-//                        Toast.makeText(RegisterActivity.this, "세션이 닫혔습니다.. 다시 시도해주세요", Toast.LENGTH_SHORT).show();
-//                    }
-//
-//                    @Override
-//                    public void onSuccess(MeV2Response result) {
-//
-//                        //로그인 성공
-//                        Intent intent = new Intent(RegisterActivity.this, KakaoProfile.class);
-//                        intent.putExtra("name", result.getKakaoAccount().getProfile().getNickname());
-//                        intent.putExtra("profileImg", result.getKakaoAccount().getProfile().getProfileImageUrl());
-//                        intent.putExtra("email", result.getKakaoAccount().getEmail());
-//                        startActivity(intent);
-//
-//                        Toast.makeText(RegisterActivity.this, "환영 합니다~", Toast.LENGTH_SHORT).show();
-//                    }
-//                });
-//            }
-//
-//            @Override
-//            public void onSessionOpenFailed(KakaoException exception) {
-//                Toast.makeText(RegisterActivity.this, "onSessionOpenFailed", Toast.LENGTH_SHORT).show();
-//            }
-//        };
-//
-//        Session.getCurrentSession().addCallback(mSessionCallback);
-//        Session.getCurrentSession().checkAndImplicitOpen();
-
-    //<===========카카오============================================================================================================>
-
-//        getAppKeyHash();
-
-        RadioGroup rg_gender;
-        RadioButton rb_male, rb_female;
-
-
-        et_name = (EditText)findViewById(R.id.et_name);
-        et_nickname = (EditText)findViewById(R.id.et_nickname);
-        et_email = (EditText)findViewById(R.id.et_email);
-        et_passwd = (EditText)findViewById(R.id.et_passwd);
-        et_passwd_confirm = (EditText)findViewById(R.id.et_passwd_confirm);
-        rb_male = findViewById(R.id.rb_male);
-        rb_female = findViewById(R.id.rb_female);
-
-        btn_submit = (Button)findViewById(R.id.btn_submit);
-
-
-        btn_submit.setOnClickListener((v) -> {
-            String data = "{" +
-                    "\"nickname\"" + "\"" + et_nickname.getText().toString() + "\","+
-                    "\"email\"" + "\"" + et_email.getText().toString() + "\","+
-                    "\"password\"" + "\"" + et_passwd.getText().toString() + "\","+
-                    "}";
-            Submit(data);
+        btn_submit = (Button) findViewById(R.id.btn_submit);
+        et_name = (EditText) findViewById(R.id.et_name);
+        et_nickname = (EditText) findViewById(R.id.et_nickname);
+        et_passwd = (EditText) findViewById(R.id.et_passwd);
+        et_email = (EditText) findViewById(R.id.et_email);
+        rg_gender = (RadioGroup) findViewById(R.id.radioGroup);
+        et_passwd_confirm = (EditText) findViewById(R.id.et_passwd_confirm);
 
 
 
-//            //email과 password 유효성 검사 하는 코드
-            if(et_email.getText().toString().length() == 0){
-                Toast.makeText(RegisterActivity.this, "Email을 입력하세요", Toast.LENGTH_SHORT).show();
-                et_email.requestFocus();
-                return;
-            }
+        rb_male = (RadioButton) findViewById(R.id.rb_male);
+        rb_female = (RadioButton) findViewById(R.id.rb_female);
 
-            //이메일형식체크
+
+
+
+        btn_submit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                //이메일형식체크
             if(!android.util.Patterns.EMAIL_ADDRESS.matcher(et_email.getText().toString()).matches())
             {
                 Toast.makeText(RegisterActivity.this,"이메일 형식이 아닙니다",Toast.LENGTH_SHORT).show();
@@ -181,124 +137,85 @@ public class RegisterActivity extends AppCompatActivity {
             }
 
 
-            Intent intent = new Intent(this, Login.class);
-            startActivity(intent);
 
 
+
+
+
+
+
+                RadioButton rd = (RadioButton) findViewById(rg_gender.getCheckedRadioButtonId());
+                gender = rd.getText().toString();
+
+                if(gender.equals("남자"))
+                    gender="male";
+                else
+                    gender="female";
+
+                Thread checkEmail = new CheckEmail();
+                checkEmail.start();
+
+            }
         });
 
 
-
-
-    }
-
-     //카카오 로그인 시 필요한 해시키를 얻는 메소드 이다.
-    private void getAppKeyHash(){
-        try {
-            PackageInfo info = getPackageManager().getPackageInfo(getPackageName(), PackageManager.GET_SIGNATURES);
-            for(Signature signature : info.signatures){
-                MessageDigest md;
-                md = MessageDigest.getInstance("SHA");
-                md.update(signature.toByteArray());
-                String something = new String(Base64.encode(md.digest(), 0));
-                Log.e("Hash key", something);
-            }
-        }catch (Exception e){
-            Log.e("name not found", e.toString());
-        }
-    }
-
-
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-//        if(Session.getCurrentSession().handleActivityResult(requestCode, resultCode, data))
-//        super.onActivityResult(requestCode, resultCode, data);
-//    }
 //
-//    @Override
-//    protected void onDestroy() {
-//        super.onDestroy();
-//        Session.getCurrentSession().removeCallback(mSessionCallback);
-//    }
 
-    private void Submit(String data)
+
+    }
+
+    public class CheckEmail extends Thread
     {
-        try{
-            JSONObject jsonBody = new JSONObject();
-            jsonBody.put("nickname", et_nickname.getText().toString());
-            jsonBody.put("email", et_email.getText().toString());
-            jsonBody.put("password", et_passwd.getText().toString());
-            String gender = "";
-//            if(rb_male.isSelected()) {
-//                gender = "male";
-//                System.out.println(gender);
-//            }
-//            if(rb_female.isSelected()){
-//                gender = "female";
-//                System.out.println(gender);
-//            }
-//            jsonBody.put("gender", gender);
+        @Override
+        public void run()
+        {
+            Log.d("senderThread","senderThread start");
 
-            final String requestBody = jsonBody.toString();
+            OkHttpClient client = new OkHttpClient();
 
-            String URL = "https://tazoapp.site/auth/signup";
+            email = et_email.getText().toString();
+            RequestBody formBody = new FormBody.Builder()
+                    .add("nickname",et_nickname.getText().toString())
+                    .add("email", email)
+                    .add("password",et_passwd.getText().toString())
+                    .add("gender",gender)
+                    .build();
 
-            requestQueue = Volley.newRequestQueue(getApplicationContext());
-            StringRequest stringRequest = new StringRequest(Request.Method.POST, URL, new Response.Listener<String>() {
+
+
+            okhttp3.Request request = new Request.Builder()
+                    .url("https://tazoapp.site/auth/signup")
+                    .post(formBody)
+                    .build();
+
+//                Response response = client.newCall(request).execute();
+            client.newCall(request).enqueue(new Callback() {
                 @Override
-                public void onResponse(String response) {
-
-                    Log.i("VOLLEY", response);
-
-                    intent();
-
+                public void onFailure(Call call, IOException e)
+                {
+                    System.out.println("연결 실패");
+                    e.printStackTrace();
                 }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    Toast.makeText(getApplicationContext(), "g.yju형식이 아닙니다", Toast.LENGTH_SHORT).show();
-
-
-
-                    et_email.requestFocus();
-                    System.out.println("최지성");
-//                    Log.wtf("VOLLEY", error.toString());
-//                    Log.e("Volley", error.toString());
-                }
-            })
-            {
-                @Override
-                public String getBodyContentType(){ return "application/json; charset=utf-8"; }
 
                 @Override
-                public byte[] getBody() throws AuthFailureError {
-                    try {
-                        return requestBody == null ? null : requestBody.getBytes("utf-8");
-                    }catch (UnsupportedEncodingException uee){
-                        VolleyLog.wtf("Unsupported Encoding while trying to get the bytes of %s using %s", requestBody, "utf-8");
-                        return null;
+                public void onResponse(Call call, Response response) throws IOException
+                {
+                    System.out.println("연결 성공");
+                    System.out.println(response);
+
+                    if(response.code() == 201)
+                    {
+                        Intent intent1 = new Intent(context, Emailconfirm.class);
+                        intent1.putExtra("email",email);
+                        startActivity(intent1);
                     }
                 }
-
-                @Override
-                protected Response<String> parseNetworkResponse(NetworkResponse response) {
-                    String responseString = "";
-                    if (response != null) {
-                        responseString = String.valueOf(response.statusCode);
-                    }
-                    return Response.success(responseString, HttpHeaderParser.parseCacheHeaders(response));
-                }
-
-            };
+            });
 
 
-            requestQueue.add(stringRequest);
 
 
-        }catch (JSONException e){
-            e.printStackTrace();
         }
-
 
     }
 }

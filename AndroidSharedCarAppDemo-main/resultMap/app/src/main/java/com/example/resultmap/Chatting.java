@@ -7,6 +7,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -108,19 +109,9 @@ public class Chatting extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chatting);
 
+        Thread checkLogin = new CheckLogin();
+        checkLogin.start();
 
-
-//        Intent socketServiceIntent = new Intent(this, SocketService.class);
-//        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-//        {
-//            this.startForegroundService(socketServiceIntent);
-//            Log.d("Boot2","BootReceier.onReceive.if");
-//        }
-//        else
-//        {
-//            this.startService(socketServiceIntent);
-//            Log.d("Boot2","MyAutoRunApp.onReceive.else");
-//        }
 
 //        *********************************************************************
 //      백그라운드 서비스 등록
@@ -128,6 +119,7 @@ public class Chatting extends AppCompatActivity {
             if(!isServiceRunning(className))
             {
                 socketServiceIntent = new Intent(this,SocketService.class);
+                socketServiceIntent.putExtra("roomNumber","방번호입니다");
                 socketServiceIntent.setAction("startForground");
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     startForegroundService(socketServiceIntent);
@@ -599,6 +591,49 @@ public class Chatting extends AppCompatActivity {
         }
 
         return false;
+    }
+
+
+    public class CheckLogin extends Thread
+    {
+        @Override
+        public void run()
+        {
+
+            String url = "https://tazoapp.site/auth";
+            String shard="file";
+            try {
+                OkHttpClient client = new OkHttpClient();
+
+                SharedPreferences sharedPreferences = getSharedPreferences(shard,0);
+                String setCookie = sharedPreferences.getString("cookie","");
+                Log.d("세션",setCookie);
+
+                Request request = new Request.Builder()
+                        .addHeader("cookie", "123123"+setCookie)
+                        .url(url)
+                        .build();
+                Response response = client.newCall(request)
+                        .execute();
+
+                String result = response.body().string();
+                System.out.println("result : " + result);
+                if(result.equals("null")){
+                    System.out.println("adsfasdfasdfafdsfasdf");
+                    Intent intent = new Intent(context,Login.class);
+                    startActivity(intent);
+                    finish();
+                }
+
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
+
+
+
+
+        }
+
     }
 
 }

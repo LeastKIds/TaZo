@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -83,9 +84,16 @@ public class Profile extends AppCompatActivity  {
 
     OkHttpClient client;
 
+    private Context context;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        context = this;
+
+        Thread checkLogin = new CheckLogin();
+        checkLogin.start();
 
         setContentView(R.layout.sub_profile);
 
@@ -369,4 +377,48 @@ public class Profile extends AppCompatActivity  {
             }
         });
     }
+
+    public class CheckLogin extends Thread
+    {
+        @Override
+        public void run()
+        {
+
+            String url = "https://tazoapp.site/auth";
+            String shard="file";
+            try {
+                OkHttpClient client = new OkHttpClient();
+
+                SharedPreferences sharedPreferences = getSharedPreferences(shard,0);
+                String setCookie = sharedPreferences.getString("cookie","");
+                Log.d("세션",setCookie);
+
+                Request request = new Request.Builder()
+                        .addHeader("cookie", "123123"+setCookie)
+                        .url(url)
+                        .build();
+                Response response = client.newCall(request)
+                        .execute();
+
+                String result = response.body().string();
+                System.out.println("result : " + result);
+                if(result.equals("null")){
+                    System.out.println("adsfasdfasdfafdsfasdf");
+                    Intent intent = new Intent(context,Login.class);
+                    startActivity(intent);
+                    finish();
+                }
+
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
+
+
+
+
+        }
+
+    }
+
+
 }

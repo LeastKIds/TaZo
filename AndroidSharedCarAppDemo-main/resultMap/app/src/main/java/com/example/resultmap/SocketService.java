@@ -48,6 +48,8 @@ public class SocketService extends Service {
 
     private boolean stopThread=true;
 
+    private String roomNumber = "";
+
     public SocketService() {
 
     }
@@ -75,6 +77,8 @@ public class SocketService extends Service {
 
         if ("startForground".equals(intent.getAction())) {
             Log.d("Boot2", "start getAction");
+            roomNumber = intent.getStringExtra("roomNumber");
+            System.out.println("**************" + roomNumber + "********************");
             startForgroundService();
         }
 
@@ -171,9 +175,15 @@ public class SocketService extends Service {
 
         startForeground(1, builder.build());
 
-        socketThread = new SocketThread();
-        socketThread.start();
+//        socketThread = new SocketThread();
+//        socketThread.start();
 
+        try{
+
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
 
     }
 
